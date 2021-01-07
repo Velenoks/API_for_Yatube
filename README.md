@@ -1,2 +1,2 @@
-# api_final
-api final
+# Api for Yatube
+Разработка API для социальной сети Yatube
