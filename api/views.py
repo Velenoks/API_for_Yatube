@@ -13,11 +13,14 @@ from .permission import IsAuthorOrReadOnly, IsAuthorAndFollow
 
 
 class PostViewSet(viewsets.ModelViewSet):
-    queryset = Post.objects.all()
+    queryset = Post.objects.select_related(
+        'author',
+        'group',
+    )
     serializer_class = PostSerializer
     permission_classes = (IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('group', )
+    filterset_fields = ('group',)
 
     def perform_create(self, serializer, *args, **kwargs):
         serializer.save(author=self.request.user)
@@ -29,7 +32,9 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         id_post = self.kwargs['id_post']
-        comments = Comment.objects.filter(post=id_post)
+        comments = Comment.objects.select_related(
+            'author',
+        ).filter(post=id_post)
         return comments
 
     def perform_create(self, serializer, *args, **kwargs):
@@ -51,8 +56,8 @@ class FollowViewSet(mixins.CreateModelMixin,
                     viewsets.GenericViewSet):
     serializer_class = FollowSerializer
     permission_classes = (IsAuthenticated, IsAuthorAndFollow,)
-    filter_backends = (SearchFilter, )
-    search_fields = ('user__username', )
+    filter_backends = (SearchFilter,)
+    search_fields = ('user__username',)
 
     def get_queryset(self):
         queryset = Follow.objects.filter(following=self.request.user)
